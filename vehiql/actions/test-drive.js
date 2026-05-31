@@ -144,9 +144,15 @@ export async function getUserTestDrives() {
 /**
  * Cancel a test drive booking
  */
+/**
+ * Cancel a test drive booking
+ */
 export async function cancelTestDrive(bookingId) {
   try {
+    console.log("Cancelling booking:", bookingId);
+
     const { userId } = await auth();
+
     if (!userId) {
       return {
         success: false,
@@ -154,9 +160,11 @@ export async function cancelTestDrive(bookingId) {
       };
     }
 
-    // Get the user from our database
+    // Get user from database
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: {
+        clerkUserId: userId,
+      },
     });
 
     if (!user) {
@@ -166,9 +174,11 @@ export async function cancelTestDrive(bookingId) {
       };
     }
 
-    // Get the booking
+    // Get booking
     const booking = await db.testDriveBooking.findUnique({
-      where: { id: bookingId },
+      where: {
+        id: bookingId,
+      },
     });
 
     if (!booking) {
@@ -178,15 +188,15 @@ export async function cancelTestDrive(bookingId) {
       };
     }
 
-    // Check if user owns this booking
-    if (booking.userId !== user.id || user.role !== "ADMIN") {
+    // User must own booking OR be admin
+    if (booking.userId !== user.id && user.role !== "ADMIN") {
       return {
         success: false,
         error: "Unauthorized to cancel this booking",
       };
     }
 
-    // Check if booking can be cancelled
+    // Prevent cancelling already cancelled bookings
     if (booking.status === "CANCELLED") {
       return {
         success: false,
@@ -194,6 +204,7 @@ export async function cancelTestDrive(bookingId) {
       };
     }
 
+    // Prevent cancelling completed bookings
     if (booking.status === "COMPLETED") {
       return {
         success: false,
@@ -201,25 +212,112 @@ export async function cancelTestDrive(bookingId) {
       };
     }
 
-    // Update the booking status
-    await db.testDriveBooking.update({
-      where: { id: bookingId },
-      data: { status: "CANCELLED" },
+    // Update booking status
+    const updatedBooking = await db.testDriveBooking.update({
+      where: {
+        id: bookingId,
+      },
+      data: {
+        status: "CANCELLED",
+      },
     });
 
-    // Revalidate paths
+    console.log("Booking cancelled:", updatedBooking.id);
+
+    // Refresh pages
     revalidatePath("/reservations");
     revalidatePath("/admin/test-drives");
 
     return {
       success: true,
       message: "Test drive cancelled successfully",
+      data: updatedBooking,
     };
   } catch (error) {
     console.error("Error cancelling test drive:", error);
+
     return {
       success: false,
-      error: error.message,
+      error: error.message || "Failed to cancel booking",
     };
   }
 }
+// export async function cancelTestDrive(bookingId) {
+//   try {
+//     const { userId } = await auth();
+//     if (!userId) {
+//       return {
+//         success: false,
+//         error: "Unauthorized",
+//       };
+//     }
+
+//     // Get the user from our database
+//     const user = await db.user.findUnique({
+//       where: { clerkUserId: userId },
+//     });
+
+//     if (!user) {
+//       return {
+//         success: false,
+//         error: "User not found",
+//       };
+//     }
+
+//     // Get the booking
+//     const booking = await db.testDriveBooking.findUnique({
+//       where: { id: bookingId },
+//     });
+
+//     if (!booking) {
+//       return {
+//         success: false,
+//         error: "Booking not found",
+//       };
+//     }
+
+//     // Check if user owns this booking
+//     if (booking.userId !== user.id || user.role !== "ADMIN") {
+//       return {
+//         success: false,
+//         error: "Unauthorized to cancel this booking",
+//       };
+//     }
+
+//     // Check if booking can be cancelled
+//     if (booking.status === "CANCELLED") {
+//       return {
+//         success: false,
+//         error: "Booking is already cancelled",
+//       };
+//     }
+
+//     if (booking.status === "COMPLETED") {
+//       return {
+//         success: false,
+//         error: "Cannot cancel a completed booking",
+//       };
+//     }
+
+//     // Update the booking status
+//     await db.testDriveBooking.update({
+//       where: { id: bookingId },
+//       data: { status: "CANCELLED" },
+//     });
+
+//     // Revalidate paths
+//     revalidatePath("/reservations");
+//     revalidatePath("/admin/test-drives");
+
+//     return {
+//       success: true,
+//       message: "Test drive cancelled successfully",
+//     };
+//   } catch (error) {
+//     console.error("Error cancelling test drive:", error);
+//     return {
+//       success: false,
+//       error: error.message,
+//     };
+//   }
+// }

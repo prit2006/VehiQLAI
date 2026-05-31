@@ -66,9 +66,8 @@ export function TestDriveCard({
   return (
     <>
       <Card
-        className={`overflow-hidden ${
-          isPast ? "opacity-80 hover:opacity-100 transition-opacity" : ""
-        }`}
+        className={`overflow-hidden ${isPast ? "opacity-80 hover:opacity-100 transition-opacity" : ""
+          }`}
       >
         <div className="flex flex-col sm:flex-row">
           {/* Car Image - Left */}
@@ -117,9 +116,12 @@ export function TestDriveCard({
               {isAdmin && booking.user && (
                 <div className="flex items-center text-gray-600">
                   <User className="h-4 w-4 mr-2" />
-                  {booking.user.name || booking.user.email}
+                  {booking.user.name
+                    ? booking.user.name.replace(/\s*null\s*/gi, "").trim()
+                    : booking.user.email}
                 </div>
-              )}
+              ) }
+
             </div>
           </div>
 
@@ -150,20 +152,20 @@ export function TestDriveCard({
               </Button>
               {(booking.status === "PENDING" ||
                 booking.status === "CONFIRMED") && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setCancelDialogOpen(true)}
-                  disabled={isCancelling}
-                >
-                  {isCancelling ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Cancel"
-                  )}
-                </Button>
-              )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setCancelDialogOpen(true)}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Cancel"
+                    )}
+                  </Button>
+                )}
             </div>
           )}
         </div>
