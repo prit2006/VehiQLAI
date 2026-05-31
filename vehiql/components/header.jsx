@@ -1,10 +1,8 @@
 import React from "react";
-import { Button } from "./ui/button";
-import { Heart, CarFront, Layout, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { checkUser } from "@/lib/checkUser";
 import Image from "next/image";
+import HeaderAuth from "./header-auth";
 
 const Header = async ({ isAdminPage = false }) => {
   const user = await checkUser();
@@ -26,65 +24,7 @@ const Header = async ({ isAdminPage = false }) => {
           )}
         </Link>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-4">
-          {isAdminPage ? (
-            <>
-              <Link href="/">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <ArrowLeft size={18} />
-                  <span>Back to App</span>
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <SignedIn>
-              {!isAdmin && (
-                <Link
-                  href="/reservations"
-                  className="text-gray-600 hover:text-blue-600 flex items-center gap-2"
-                >
-                  <Button variant="outline">
-                    <CarFront size={18} />
-                    <span className="hidden md:inline">My Reservations</span>
-                  </Button>
-                </Link>
-              )}
-              <a href="/saved-cars">
-                <Button className="flex items-center gap-2">
-                  <Heart size={18} />
-                  <span className="hidden md:inline">Saved Cars</span>
-                </Button>
-              </a>
-              {isAdmin && (
-                <Link href="/admin">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Layout size={18} />
-                    <span className="hidden md:inline">Admin Portal</span>
-                  </Button>
-                </Link>
-              )}
-            </SignedIn>
-          )}
-
-          <SignedOut>
-            {!isAdminPage && (
-              <SignInButton forceRedirectUrl="/">
-                <Button variant="outline">Login</Button>
-              </SignInButton>
-            )}
-          </SignedOut>
-
-          <SignedIn>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10",
-                },
-              }}
-            />
-          </SignedIn>
-        </div>
+        <HeaderAuth isAdmin={isAdmin} isAdminPage={isAdminPage} />
       </nav>
     </header>
   );

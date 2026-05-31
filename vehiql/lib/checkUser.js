@@ -2,7 +2,17 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "./prisma";
 
 export const checkUser = async () => {
-  const user = await currentUser();
+  let user;
+
+  try {
+    user = await currentUser();
+  } catch (error) {
+    if (error.message?.includes("can't detect usage of clerkMiddleware")) {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!user) {
     return null;
